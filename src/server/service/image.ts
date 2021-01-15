@@ -18,7 +18,7 @@ export class ImageService extends AbstractChatService {
         this._serv = new Map();
         this._botApi = botApi;
 
-        this.use('来点涩图', new PhotoService());
+        this.use('来点涩图', new PhotoServiceV2());
         this.use('来点二次元', new AcgService());
         this.use('来点二次元涩图', new AcgR18Service(botApi));
     }
@@ -46,6 +46,23 @@ class PhotoService extends AbstractImageService {
         const res = await request<PhotoData>(`${this.url}&${Math.random()}`);
         if (res?.code === 200 && res?.pic_url) {
             reply(msg, [Message.Image(null, res.pic_url)]);
+        }
+    }
+}
+
+interface PhotoV2Data {
+    code: string;
+    type: string;
+    url: string;
+}
+
+class PhotoServiceV2 extends AbstractImageService {
+    private url: string = 'https://api88.net/api/img/rand/?type=json';
+
+    async run(msg: GroupMessage) {
+        const res = await request<PhotoV2Data>(`${this.url}&t=${Math.random()}`);
+        if (res?.code === 'ok' && res?.url) {
+            reply(msg, [Message.Image(null, res.url)]);
         }
     }
 }
