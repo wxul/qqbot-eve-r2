@@ -6,7 +6,24 @@ import { Message, MiraiApiHttp } from 'mirai-ts';
 import config from 'config';
 
 export abstract class AbstractImageService {
+    private _botApi: MiraiApiHttp;
+    constructor(botApi: MiraiApiHttp) {
+        this._botApi = botApi;
+    }
     abstract run(msg: GroupMessage): any;
+    async getMembers(groupId: number) {
+        const list = await this._botApi.memberList(groupId);
+        return list;
+    }
+
+    async validNumber(msg: GroupMessage) {
+        const result = (await this.getMembers(msg.sender.group.id)) as Array<any>;
+        if (result && result.length >= 49) {
+            reply(msg, [Message.Plain('群人数超过50不提供专业涩图服务'), Message.Face(178, '斜眼笑')]);
+            return false;
+        }
+        return true;
+    }
 }
 
 export class ImageService extends AbstractChatService {
@@ -18,8 +35,9 @@ export class ImageService extends AbstractChatService {
         this._serv = new Map();
         this._botApi = botApi;
 
-        this.use('来点涩图', new PhotoServiceV2());
-        this.use('来点二次元', new AcgService());
+        this.use('来点涩图', new PhotoServiceV2(botApi));
+        this.use('来点专业涩图', new PhotoR18Service(botApi));
+        this.use('来点二次元', new AcgService(botApi));
         this.use('来点二次元涩图', new AcgR18Service(botApi));
     }
     use(key: string, serv: AbstractImageService) {
@@ -67,6 +85,23 @@ class PhotoServiceV2 extends AbstractImageService {
     }
 }
 
+interface PhotoR18Data {
+    imgurl: string;
+}
+
+class PhotoR18Service extends AbstractImageService {
+    private url: string = 'https://api.pixivweb.com/bw.php?return=json';
+
+    async run(msg: GroupMessage) {
+        if (await this.validNumber(msg)) {
+            const res = await request<PhotoR18Data>(`${this.url}&t=${Math.random()}`);
+            if (res?.imgurl) {
+                reply(msg, [Message.Image(null, res.imgurl)]);
+            }
+        }
+    }
+}
+
 interface AcgData {
     code: string;
     imgurl: string;
@@ -99,19 +134,14 @@ interface AcgR18ImageData {
 class AcgR18Service extends AbstractImageService {
     private url: string = 'https://api.lolicon.app/setu/';
     private _key: string;
-    private _botApi: MiraiApiHttp;
 
     constructor(botApi: MiraiApiHttp) {
-        super();
+        super(botApi);
         this._key = config.get<string>('image.r18key');
-        this._botApi = botApi;
     }
 
     async run(msg: GroupMessage) {
-        const result = (await this.getMembers(msg.sender.group.id)) as Array<any>;
-        if (result && result.length >= 79) {
-            reply(msg, [Message.Plain('群人数超过80不提供涩图服务'), Message.Face(178, '斜眼笑')]);
-        } else {
+        if (await this.validNumber(msg)) {
             const res = await request<AcgR18Data>(this.url, {
                 params: {
                     apikey: this._key,
@@ -131,10 +161,5 @@ class AcgR18Service extends AbstractImageService {
                 reply(msg, [Message.Plain('撸多伤身'), Message.Face(178, '斜眼笑')]);
             }
         }
-    }
-
-    async getMembers(groupId: number) {
-        const list = await this._botApi.memberList(groupId);
-        return list;
     }
 }
