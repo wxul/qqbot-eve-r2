@@ -1,0 +1,11 @@
+.DS_Store
+dist
+docs
+temp/*
+!temp/.gitkeep
+
+node_modules
+package-lock.json
+yarn.lock
+
+config/private.json

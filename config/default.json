@@ -1,0 +1,25 @@
+{
+    "consoleConfig": {
+        "host": "127.0.0.1",
+        "port": 8080,
+        "authKey": "1234567890",
+        "enableWebsocket": false
+    },
+    "QQ": 12345,
+    "prefix": [
+        "?",
+        "？"
+    ],
+    "prefixConfig": {
+        "roll": "r",
+        "query": "s",
+        "image": "i"
+    },
+    "debugLimit": {
+        "groupId": 1234567
+    },
+    "image": {
+        "mclPath": "/mcl/data/net.mamoe.mirai-api-http/images",
+        "r18key": "123123"
+    }
+}
