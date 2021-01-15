@@ -96,7 +96,11 @@ class PhotoR18Service extends AbstractImageService {
         if (await this.validNumber(msg)) {
             const res = await request<PhotoR18Data>(`${this.url}&t=${Math.random()}`);
             if (res?.imgurl) {
-                reply(msg, [Message.Image(null, res.imgurl)]);
+                const imgurl = res.imgurl;
+                const filename = imgurl.substring(imgurl.lastIndexOf('/') + 1);
+                const path = await download(imgurl, filename);
+                reply(msg, [Message.Image(null, null, filename)]);
+                // reply(msg, [Message.Image(null, res.imgurl)]);
             }
         }
     }
@@ -150,7 +154,6 @@ class AcgR18Service extends AbstractImageService {
                     t: Date.now(),
                 },
             });
-            msg.sender.group;
             if (res?.code === 0 && res?.data.length > 0) {
                 const imgurl = res.data[0].url;
                 const filename = imgurl.substring(imgurl.lastIndexOf('/') + 1);
