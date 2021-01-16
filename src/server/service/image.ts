@@ -1,6 +1,6 @@
-import { GroupMessage } from 'mirai-ts/dist/types/message-type';
+import { GroupMessage, MessageChain } from 'mirai-ts/dist/types/message-type';
 import { AbstractChatService } from '../serverType';
-import { reply } from '../reply';
+import { reply, replyAndRecall } from '../reply';
 import { download, request } from '../utils/download';
 import { Message, MiraiApiHttp } from 'mirai-ts';
 import config from 'config';
@@ -23,6 +23,10 @@ export abstract class AbstractImageService {
             return false;
         }
         return true;
+    }
+
+    async replyAndRecall(msg: GroupMessage, msgChain: string | MessageChain, quote?: boolean) {
+        await replyAndRecall(this._botApi, msg, msgChain, quote);
     }
 }
 
@@ -99,7 +103,7 @@ class PhotoR18Service extends AbstractImageService {
                 const imgurl = res.imgurl;
                 const filename = imgurl.substring(imgurl.lastIndexOf('/') + 1);
                 const path = await download(imgurl, filename);
-                reply(msg, [Message.Image(null, null, filename)]);
+                this.replyAndRecall(msg, [Message.Image(null, null, filename)]);
                 // reply(msg, [Message.Image(null, res.imgurl)]);
             }
         }
@@ -158,7 +162,7 @@ class AcgR18Service extends AbstractImageService {
                 const imgurl = res.data[0].url;
                 const filename = imgurl.substring(imgurl.lastIndexOf('/') + 1);
                 const path = await download(imgurl, filename);
-                reply(msg, [Message.Image(null, null, filename)]);
+                this.replyAndRecall(msg, [Message.Image(null, null, filename)]);
                 // reply(msg, [Message.Image(null, imgurl)]);
             } else if (res?.code === 429) {
                 reply(msg, [Message.Plain('撸多伤身'), Message.Face(178, '斜眼笑')]);
