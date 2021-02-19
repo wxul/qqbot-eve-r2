@@ -6,6 +6,7 @@ import config from 'config';
 import { AbstractChatService } from './serverType';
 import { RollService } from './service/roll';
 import { QueryService } from './service/query';
+import { CalculateService } from './service/calculate';
 
 interface PrefixConfig {
     [K: string]: string;
@@ -35,6 +36,7 @@ export class ChatServer {
         this.use('i', new ImageService(mirai.api));
         this.use('r', new RollService());
         this.use('s', new QueryService());
+        this.use('c', new CalculateService());
     }
 
     use(key: string, serv: AbstractChatService) {
@@ -75,7 +77,11 @@ export class ChatServer {
     }
 
     async helper(msg: GroupMessage) {
-        const content = '使用帮助：\n' + `输入 ${this._prefix[0]}${prefixConfig['query']} 三钛 查询价格\n` + `输入 ${this._prefix[0]}${prefixConfig['roll']} 1-1000 进行无聊的roll点看人品`;
+        const content =
+            '使用帮助：\n' +
+            `输入 ${this._prefix[0]}${prefixConfig['query']} 三钛 查询价格\n` +
+            `输入 ${this._prefix[0]}${prefixConfig['roll']} 1-1000 进行无聊的roll点看人品\n` +
+            `输入 ${this._prefix[0]}${prefixConfig['calculate']} 1+2*3-4/5 进行简单的四则运算`;
         return await reply(msg, content);
     }
 }

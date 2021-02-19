@@ -6,14 +6,12 @@
         "enableWebsocket": false
     },
     "QQ": 12345,
-    "prefix": [
-        "?",
-        "？"
-    ],
+    "prefix": ["?", "？"],
     "prefixConfig": {
         "roll": "r",
         "query": "s",
-        "image": "i"
+        "image": "i",
+        "calculate": "c"
     },
     "debugLimit": {
         "groupId": 1234567
