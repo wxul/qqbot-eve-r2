@@ -10,22 +10,31 @@ export abstract class AbstractImageService {
     constructor(botApi: MiraiApiHttp) {
         this._botApi = botApi;
     }
-    abstract run(msg: GroupMessage): any;
+    abstract run(msg: GroupMessage, ...rest: any[]): any;
     async getMembers(groupId: number) {
         const list = await this._botApi.memberList(groupId);
         return list;
     }
 
     async validNumber(msg: GroupMessage) {
-        const result = (await this.getMembers(msg.sender.group.id)) as Array<any>;
+        const result = (await this.getMembers(
+            msg.sender.group.id
+        )) as Array<any>;
         if (result && result.length >= 49) {
-            reply(msg, [Message.Plain('群人数超过50不提供专业涩图服务'), Message.Face(178, '斜眼笑')]);
+            reply(msg, [
+                Message.Plain('群人数超过50不提供专业涩图服务'),
+                Message.Face(178, '斜眼笑'),
+            ]);
             return false;
         }
         return true;
     }
 
-    async replyAndRecall(msg: GroupMessage, msgChain: string | MessageChain, quote?: boolean) {
+    async replyAndRecall(
+        msg: GroupMessage,
+        msgChain: string | MessageChain,
+        quote?: boolean
+    ) {
         await replyAndRecall(this._botApi, msg, msgChain, quote);
     }
 }
@@ -48,9 +57,14 @@ export class ImageService extends AbstractChatService {
         this._serv.set(key, serv);
     }
     run(msg: GroupMessage, content: string) {
-        const k = (content || '').trim();
-        if (this._serv.has(k)) {
-            this._serv.get(k)?.run(msg);
+        const k = (content || '')
+            .trim()
+            .split(' ')
+            .filter(s => !!s);
+        if (!k || k.length === 0) return;
+        const [key, arg1] = k;
+        if (this._serv.has(key)) {
+            this._serv.get(key)?.run(msg, arg1);
         }
     }
 }
@@ -62,7 +76,8 @@ interface PhotoData {
 }
 
 class PhotoService extends AbstractImageService {
-    private url: string = 'https://api.66mz8.com/api/rand.tbimg.php?format=json';
+    private url: string =
+        'https://api.66mz8.com/api/rand.tbimg.php?format=json';
 
     async run(msg: GroupMessage) {
         const res = await request<PhotoData>(`${this.url}&${Math.random()}`);
@@ -82,7 +97,9 @@ class PhotoServiceV2 extends AbstractImageService {
     private url: string = 'https://api88.net/api/img/rand/?type=json';
 
     async run(msg: GroupMessage) {
-        const res = await request<PhotoV2Data>(`${this.url}&t=${Math.random()}`);
+        const res = await request<PhotoV2Data>(
+            `${this.url}&t=${Math.random()}`
+        );
         if (res?.code === 'ok' && res?.url) {
             reply(msg, [Message.Image(null, res.url)]);
         }
@@ -98,7 +115,9 @@ class PhotoR18Service extends AbstractImageService {
 
     async run(msg: GroupMessage) {
         if (await this.validNumber(msg)) {
-            const res = await request<PhotoR18Data>(`${this.url}&t=${Math.random()}`);
+            const res = await request<PhotoR18Data>(
+                `${this.url}&t=${Math.random()}`
+            );
             if (res?.imgurl) {
                 const imgurl = res.imgurl;
                 const filename = imgurl.substring(imgurl.lastIndexOf('/') + 1);
@@ -148,7 +167,7 @@ class AcgR18Service extends AbstractImageService {
         this._key = config.get<string>('image.r18key');
     }
 
-    async run(msg: GroupMessage) {
+    async run(msg: GroupMessage, arg1: string) {
         if (await this.validNumber(msg)) {
             const res = await request<AcgR18Data>(this.url, {
                 params: {
@@ -156,6 +175,7 @@ class AcgR18Service extends AbstractImageService {
                     r18: 1,
                     size1200: true,
                     t: Date.now(),
+                    keyword: arg1 || null,
                 },
             });
             if (res?.code === 0 && res?.data.length > 0) {
@@ -165,7 +185,10 @@ class AcgR18Service extends AbstractImageService {
                 this.replyAndRecall(msg, [Message.Image(null, null, filename)]);
                 // reply(msg, [Message.Image(null, imgurl)]);
             } else if (res?.code === 429) {
-                reply(msg, [Message.Plain('撸多伤身'), Message.Face(178, '斜眼笑')]);
+                reply(msg, [
+                    Message.Plain('撸多伤身'),
+                    Message.Face(178, '斜眼笑'),
+                ]);
             }
         }
     }
